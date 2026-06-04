@@ -1,0 +1,16 @@
+﻿bin/
+obj/
+.vs/
+.vscode/
+*.user
+*.suo
+*.apk
+*.aab
+*.keystore
+*.jks
+*.pfx
+*.tmp
+*.log
+last-apk-path.txt
+adb-path.txt
+phone-crash.txt
