@@ -63,6 +63,44 @@ public sealed class ScannerApiClient
         }
     }
 
+
+    public async Task<QuickAddItemResponse?> PostQuickAddItemAsync(int roomSessionId, MobileQuickAddItemRequest request)
+    {
+        var response = await _httpClient.PostAsJsonAsync(
+            BuildUrl($"/api/mobile/room-sessions/{roomSessionId}/add-item"),
+            request);
+
+        var json = await response.Content.ReadAsStringAsync();
+
+        try
+        {
+            var result = JsonSerializer.Deserialize<QuickAddItemResponse>(json, JsonOptions);
+
+            if (result != null)
+            {
+                return result;
+            }
+
+            return new QuickAddItemResponse
+            {
+                Ok = false,
+                Message = response.IsSuccessStatusCode
+                    ? "Ο server απάντησε, αλλά το αποτέλεσμα δεν διαβάστηκε."
+                    : $"Σφάλμα server: {(int)response.StatusCode}"
+            };
+        }
+        catch
+        {
+            return new QuickAddItemResponse
+            {
+                Ok = false,
+                Message = response.IsSuccessStatusCode
+                    ? "Ο server απάντησε, αλλά το αποτέλεσμα δεν διαβάστηκε."
+                    : $"Σφάλμα server: {(int)response.StatusCode}"
+            };
+        }
+    }
+
     private async Task<T?> GetAsync<T>(string path)
     {
         var response = await _httpClient.GetAsync(BuildUrl(path));

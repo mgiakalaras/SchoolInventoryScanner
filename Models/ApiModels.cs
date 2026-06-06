@@ -204,3 +204,112 @@ public sealed class ScanSummaryDto
     [JsonPropertyName("unknownItemsCount")]
     public int UnknownItemsCount { get; set; }
 }
+
+public sealed class MobileQuickAddItemRequest
+{
+    [JsonPropertyName("name")]
+    public string Name { get; set; } = "";
+
+    [JsonPropertyName("categoryId")]
+    public int? CategoryId { get; set; }
+
+    [JsonPropertyName("categoryName")]
+    public string? CategoryName { get; set; }
+
+    [JsonPropertyName("brand")]
+    public string? Brand { get; set; }
+
+    [JsonPropertyName("model")]
+    public string? Model { get; set; }
+
+    [JsonPropertyName("serialNumber")]
+    public string? SerialNumber { get; set; }
+
+    [JsonPropertyName("quantity")]
+    public int? Quantity { get; set; }
+
+    [JsonPropertyName("condition")]
+    public int? Condition { get; set; }
+
+    [JsonPropertyName("conditionText")]
+    public string? ConditionText { get; set; }
+
+    [JsonPropertyName("description")]
+    public string? Description { get; set; }
+
+    [JsonPropertyName("notes")]
+    public string? Notes { get; set; }
+}
+
+public sealed class QuickAddItemResponse
+{
+    [JsonPropertyName("ok")]
+    public bool Ok { get; set; }
+
+    [JsonPropertyName("created")]
+    public bool Created { get; set; }
+
+    [JsonPropertyName("locked")]
+    public bool Locked { get; set; }
+
+    [JsonPropertyName("message")]
+    public string Message { get; set; } = "";
+
+    [JsonPropertyName("item")]
+    public QuickAddItemDto? Item { get; set; }
+
+    [JsonPropertyName("summary")]
+    public ScanSummaryDto? Summary { get; set; }
+}
+
+public sealed class QuickAddItemDto
+{
+    [JsonPropertyName("id")]
+    public int Id { get; set; }
+
+    [JsonPropertyName("code")]
+    public string Code { get; set; } = "";
+
+    [JsonPropertyName("name")]
+    public string Name { get; set; } = "";
+
+    [JsonPropertyName("brandModel")]
+    public string? BrandModel { get; set; }
+
+    [JsonPropertyName("roomId")]
+    public int? RoomId { get; set; }
+
+    [JsonPropertyName("roomName")]
+    public string? RoomName { get; set; }
+
+    [JsonPropertyName("categoryName")]
+    public string? CategoryName { get; set; }
+
+    [JsonPropertyName("serialNumber")]
+    public string? SerialNumber { get; set; }
+
+    [JsonPropertyName("quantity")]
+    public int Quantity { get; set; }
+
+    [JsonPropertyName("condition")]
+    public string? Condition { get; set; }
+
+    [JsonPropertyName("isActive")]
+    public bool IsActive { get; set; }
+
+    [JsonPropertyName("needsReview")]
+    public bool NeedsReview { get; set; }
+
+    [JsonPropertyName("createdFromMobileAudit")]
+    public bool CreatedFromMobileAudit { get; set; }
+
+    public override string ToString()
+    {
+        var detail = string.IsNullOrWhiteSpace(BrandModel)
+            ? CategoryName
+            : $"{BrandModel} · {CategoryName}";
+
+        return $"{Name}\n{Code}\n{detail}";
+    }
+}
+
