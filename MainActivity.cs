@@ -66,6 +66,18 @@ public sealed class MainActivity : Activity
 
     public override void OnBackPressed()
     {
+        if (_screen == "quickadd")
+        {
+            if (_selectedRoom != null)
+            {
+                _ = ShowRoomSessionAsync(_selectedRoom);
+                return;
+            }
+
+            ShowRooms();
+            return;
+        }
+
         if (_screen == "session")
         {
             _selectedRoom = null;
@@ -433,13 +445,19 @@ public sealed class MainActivity : Activity
             }
         };
 
+        var quickAddButton = CreateSecondaryButton("+ Νέο αντικείμενο στον χώρο");
+        quickAddButton.Click += (_, _) => ShowQuickAddItem(room);
+
         root.AddView(CreateAccentCard(Stack(
             CreateSectionHeader("Σάρωση αντικειμένων", "Η κάμερα είναι η βασική ροή. Το χειροκίνητο πεδίο μένει ως fallback."),
             cameraButton,
             CreateDivider(),
             codeInput,
             manualButton,
-            resultText), Purple));
+            resultText,
+            CreateDivider(),
+            quickAddButton,
+            CreateSmallText("Αν βρεις αντικείμενο που δεν υπάρχει στα αναμενόμενα, πρόσθεσέ το προσωρινά ως νέο εύρημα.")), Purple));
 
         root.AddView(CreateSectionTitle("Αναμενόμενα αντικείμενα"));
 
@@ -462,6 +480,163 @@ public sealed class MainActivity : Activity
 
         root.AddView(CreateBottomNav("scan"));
         SetContentView(WrapInScrollView(root));
+    }
+
+
+    private void ShowQuickAddItem(RoomSessionDto room)
+    {
+        _screen = "quickadd";
+        _selectedRoom = room;
+
+        var root = CreateLinearRoot();
+
+        root.AddView(CreateScreenHeader(
+            "Νέο αντικείμενο",
+            room.RoomName,
+            "+",
+            Green));
+
+        var back = CreateSecondaryButton("Πίσω στον χώρο");
+        back.Click += async (_, _) => await ShowRoomSessionAsync(room);
+        root.AddView(back);
+
+        var nameInput = CreateEditText("Ονομασία *");
+        var categoryInput = CreateEditText("Κατηγορία");
+        categoryInput.Text = "Προς έλεγχο";
+
+        var brandInput = CreateEditText("Μάρκα");
+        var modelInput = CreateEditText("Μοντέλο");
+        var serialInput = CreateEditText("Serial Number");
+        var quantityInput = CreateEditText("Ποσότητα");
+        quantityInput.Text = "1";
+        var notesInput = CreateEditText("Σημείωση");
+
+        var resultText = CreateBodyText("Συμπλήρωσε τα βασικά. Μετά από το web app μπορείς να κάνεις κανονική διόρθωση/έλεγχο.");
+        resultText.SetTextColor(Muted);
+
+        var submit = CreatePrimaryButton("Προσθήκη στον χώρο");
+        submit.Click += async (_, _) => await SubmitQuickAddItemAsync(
+            room,
+            nameInput,
+            categoryInput,
+            brandInput,
+            modelInput,
+            serialInput,
+            quantityInput,
+            notesInput,
+            resultText,
+            submit);
+
+        root.AddView(CreateAccentCard(Stack(
+            CreateSectionHeader("Γρήγορη καταχώρηση", "Για αντικείμενα που βρέθηκαν στον χώρο αλλά δεν υπάρχουν στη λίστα."),
+            nameInput,
+            categoryInput,
+            brandInput,
+            modelInput,
+            serialInput,
+            quantityInput,
+            notesInput,
+            submit,
+            resultText), Green));
+
+        root.AddView(CreateInfoStrip(
+            "Μετά την καταχώρηση",
+            "Το αντικείμενο μπαίνει στη βάση, παίρνει QR κωδικό και σημειώνεται ως νέο εύρημα προς έλεγχο από το web app."));
+
+        root.AddView(CreateBottomNav("scan"));
+        SetContentView(WrapInScrollView(root));
+    }
+
+    private async Task SubmitQuickAddItemAsync(
+        RoomSessionDto room,
+        EditText nameInput,
+        EditText categoryInput,
+        EditText brandInput,
+        EditText modelInput,
+        EditText serialInput,
+        EditText quantityInput,
+        EditText notesInput,
+        TextView resultText,
+        Button submitButton)
+    {
+        var name = nameInput.Text?.Trim() ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            resultText.Text = "Συμπλήρωσε πρώτα ονομασία αντικειμένου.";
+            resultText.SetTextColor(Amber);
+            return;
+        }
+
+        var quantity = 1;
+        if (!string.IsNullOrWhiteSpace(quantityInput.Text) &&
+            (!int.TryParse(quantityInput.Text.Trim(), out quantity) || quantity <= 0))
+        {
+            resultText.Text = "Η ποσότητα πρέπει να είναι θετικός αριθμός.";
+            resultText.SetTextColor(Amber);
+            return;
+        }
+
+        HideKeyboard(nameInput);
+        HideKeyboard(categoryInput);
+        HideKeyboard(brandInput);
+        HideKeyboard(modelInput);
+        HideKeyboard(serialInput);
+        HideKeyboard(quantityInput);
+        HideKeyboard(notesInput);
+
+        submitButton.Enabled = false;
+        resultText.Text = "Αποστολή νέου αντικειμένου...";
+        resultText.SetTextColor(Muted);
+
+        try
+        {
+            var request = new MobileQuickAddItemRequest
+            {
+                Name = name,
+                CategoryName = CleanOptionalText(categoryInput.Text, "Προς έλεγχο"),
+                Brand = CleanOptionalText(brandInput.Text),
+                Model = CleanOptionalText(modelInput.Text),
+                SerialNumber = CleanOptionalText(serialInput.Text),
+                Quantity = quantity,
+                Condition = 2,
+                Notes = CleanOptionalText(notesInput.Text)
+            };
+
+            var response = await _api.PostQuickAddItemAsync(room.Id, request);
+
+            if (response?.Ok == true)
+            {
+                resultText.Text = response.Message;
+                resultText.SetTextColor(Green);
+
+                await Task.Delay(650);
+                await ShowRoomSessionAsync(room);
+                return;
+            }
+
+            resultText.Text = response?.Message ?? "Δεν ελήφθη απάντηση από τον server.";
+            resultText.SetTextColor(response?.Locked == true ? Amber : Red);
+            submitButton.Enabled = true;
+        }
+        catch (Exception ex)
+        {
+            resultText.Text = $"Σφάλμα: {ex.Message}";
+            resultText.SetTextColor(Red);
+            submitButton.Enabled = true;
+        }
+    }
+
+    private static string? CleanOptionalText(string? value, string? fallback = null)
+    {
+        var cleaned = value?.Trim();
+
+        if (string.IsNullOrWhiteSpace(cleaned))
+        {
+            return fallback;
+        }
+
+        return cleaned;
     }
 
     private async Task StartGoogleCodeScanAsync(RoomSessionDto room, TextView resultText)
