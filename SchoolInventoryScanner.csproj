@@ -10,9 +10,11 @@
 
     <ApplicationId>gr.nyxsystems.schoolinventoryscanner</ApplicationId>
     <ApplicationTitle>School Inventory Scanner</ApplicationTitle>
-    <ApplicationDisplayVersion>0.3.1</ApplicationDisplayVersion>
-    <ApplicationVersion>31</ApplicationVersion>
+    <ApplicationDisplayVersion>0.3.7</ApplicationDisplayVersion>
+    <ApplicationVersion>37</ApplicationVersion>
     <AndroidPackageFormat>apk</AndroidPackageFormat>
+    <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
+    <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
   </PropertyGroup>
 
   <ItemGroup>
