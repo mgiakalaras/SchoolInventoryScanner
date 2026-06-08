@@ -64,6 +64,23 @@ public sealed class ScannerApiClient
     }
 
 
+
+    public async Task<QuickAddOptionsResponse?> GetQuickAddOptionsAsync()
+    {
+        try
+        {
+            return await GetAsync<QuickAddOptionsResponse>("/api/mobile/quick-add-options");
+        }
+        catch (Exception ex)
+        {
+            return new QuickAddOptionsResponse
+            {
+                Ok = false,
+                Message = $"Δεν φορτώθηκαν οι επιλογές γρήγορης καταχώρησης: {ex.Message}"
+            };
+        }
+    }
+
     public async Task<QuickAddItemResponse?> PostQuickAddItemAsync(int roomSessionId, MobileQuickAddItemRequest request)
     {
         var response = await _httpClient.PostAsJsonAsync(

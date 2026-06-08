@@ -205,6 +205,86 @@ public sealed class ScanSummaryDto
     public int UnknownItemsCount { get; set; }
 }
 
+
+public sealed class QuickAddOptionsResponse
+{
+    [JsonPropertyName("ok")]
+    public bool Ok { get; set; }
+
+    [JsonPropertyName("message")]
+    public string? Message { get; set; }
+
+    [JsonPropertyName("defaultCategoryName")]
+    public string? DefaultCategoryName { get; set; }
+
+    [JsonPropertyName("quantityDefault")]
+    public int QuantityDefault { get; set; } = 1;
+
+    [JsonPropertyName("quantityLabel")]
+    public string? QuantityLabel { get; set; }
+
+    [JsonPropertyName("categories")]
+    public List<QuickAddCategoryOptionDto> Categories { get; set; } = new();
+
+    [JsonPropertyName("conditions")]
+    public List<QuickAddConditionOptionDto> Conditions { get; set; } = new();
+
+    [JsonPropertyName("guidance")]
+    public QuickAddGuidanceDto? Guidance { get; set; }
+}
+
+public sealed class QuickAddCategoryOptionDto
+{
+    [JsonPropertyName("id")]
+    public int Id { get; set; }
+
+    [JsonPropertyName("name")]
+    public string Name { get; set; } = "";
+
+    public override string ToString()
+    {
+        return Name;
+    }
+}
+
+public sealed class QuickAddConditionOptionDto
+{
+    [JsonPropertyName("value")]
+    public int Value { get; set; }
+
+    [JsonPropertyName("name")]
+    public string Name { get; set; } = "";
+
+    [JsonPropertyName("label")]
+    public string Label { get; set; } = "";
+
+    public override string ToString()
+    {
+        return Label;
+    }
+}
+
+public sealed class QuickAddGuidanceDto
+{
+    [JsonPropertyName("primaryFieldLabel")]
+    public string? PrimaryFieldLabel { get; set; }
+
+    [JsonPropertyName("newTypeLabel")]
+    public string? NewTypeLabel { get; set; }
+
+    [JsonPropertyName("conditionLabel")]
+    public string? ConditionLabel { get; set; }
+
+    [JsonPropertyName("notesLabel")]
+    public string? NotesLabel { get; set; }
+
+    [JsonPropertyName("reviewFlagText")]
+    public string? ReviewFlagText { get; set; }
+
+    [JsonPropertyName("quantityHelpText")]
+    public string? QuantityHelpText { get; set; }
+}
+
 public sealed class MobileQuickAddItemRequest
 {
     [JsonPropertyName("name")]
