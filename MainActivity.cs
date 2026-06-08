@@ -66,6 +66,12 @@ public sealed class MainActivity : Activity
 
     public override void OnBackPressed()
     {
+        if (_screen == "createroom")
+        {
+            ShowRooms();
+            return;
+        }
+
         if (_screen == "quickadd")
         {
             if (_selectedRoom != null)
@@ -302,6 +308,7 @@ public sealed class MainActivity : Activity
         }
     }
 
+
     private void ShowRooms(AuditFolderDto folder, List<RoomSessionDto> rooms)
     {
         _screen = "rooms";
@@ -313,14 +320,24 @@ public sealed class MainActivity : Activity
 
         var back = CreateSecondaryButton("Πίσω στους φακέλους");
         back.Click += async (_, _) => await ShowFoldersAsync();
-        root.AddView(back);
+
+        var createRoom = CreatePrimaryButton("+ Νέος χώρος");
+        createRoom.Click += (_, _) => ShowCreateRoom(folder);
+
+        root.AddView(Stack(back, createRoom));
 
         if (rooms.Count == 0)
         {
-            root.AddView(CreateEmptyState("Δεν υπάρχουν χώροι", "Ο φάκελος δεν έχει room sessions. Έλεγξε τον φάκελο από το web app."));
+            root.AddView(CreateEmptyState(
+                "Δεν υπάρχουν χώροι",
+                "Αν αυτός είναι φάκελος πρώτης απογραφής, ξεκίνα με το + Νέος χώρος και μετά πρόσθεσε αντικείμενα μέσα στον χώρο."));
         }
         else
         {
+            root.AddView(CreateInfoStrip(
+                "Χώροι φακέλου",
+                "Άνοιξε έναν χώρο για σάρωση ή πάτα + Νέος χώρος αν βρίσκεσαι σε πρώτη απογραφή και πρέπει να δημιουργήσεις νέα αίθουσα/χώρο."));
+
             foreach (var room in rooms)
             {
                 root.AddView(CreateRoomCard(room));
@@ -330,6 +347,7 @@ public sealed class MainActivity : Activity
         root.AddView(CreateBottomNav("folders"));
         SetContentView(WrapInScrollView(root));
     }
+
 
     private View CreateRoomCard(RoomSessionDto room)
     {
@@ -357,6 +375,98 @@ public sealed class MainActivity : Activity
         };
 
         return CreateAccentCard(Stack(top, progress, stats, open), room.IsFinalized ? Purple : Cyan);
+    }
+
+
+    private void ShowCreateRoom(AuditFolderDto folder)
+    {
+        _screen = "createroom";
+        _selectedFolder = folder;
+        _selectedRoom = null;
+
+        var root = CreateLinearRoot();
+
+        root.AddView(CreateScreenHeader(
+            "Νέος χώρος",
+            folder.Title,
+            "+",
+            Green));
+
+        var back = CreateSecondaryButton("Πίσω στους χώρους");
+        back.Click += (_, _) => ShowRooms();
+        root.AddView(back);
+
+        var nameInput = CreateEditText("Όνομα χώρου *");
+        var resultText = CreateBodyText("Δώσε καθαρό όνομα χώρου, π.χ. Αίθουσα Α1, Εργαστήριο Πληροφορικής, Γραφείο Διευθυντή.");
+        resultText.SetTextColor(Muted);
+
+        var submit = CreatePrimaryButton("Δημιουργία χώρου");
+        submit.Click += async (_, _) => await SubmitCreateRoomAsync(folder, nameInput, resultText, submit);
+
+        root.AddView(CreateAccentCard(Stack(
+            CreateSectionHeader("Δημιουργία χώρου", "Για πρώτη απογραφή μπορείς να στήσεις τους χώρους απευθείας από το κινητό/tablet."),
+            CreateFieldLabel("Όνομα χώρου *"),
+            nameInput,
+            CreateSmallText("Χρησιμοποίησε ονόματα όπως θα θέλεις να φαίνονται μετά στις ετικέτες και στις αναφορές."),
+            submit,
+            resultText), Green));
+
+        root.AddView(CreateInfoStrip(
+            "Μετά τη δημιουργία",
+            "Ο χώρος θα εμφανιστεί στη λίστα του φακέλου. Άνοιξέ τον και πρόσθεσε τα αντικείμενα που βρίσκεις στον χώρο."));
+
+        root.AddView(CreateBottomNav("folders"));
+        SetContentView(WrapInScrollView(root));
+    }
+
+    private async Task SubmitCreateRoomAsync(
+        AuditFolderDto folder,
+        EditText nameInput,
+        TextView resultText,
+        Button submitButton)
+    {
+        var name = nameInput.Text?.Trim() ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            resultText.Text = "Συμπλήρωσε όνομα χώρου.";
+            resultText.SetTextColor(Amber);
+            return;
+        }
+
+        HideKeyboard(nameInput);
+
+        submitButton.Enabled = false;
+        resultText.Text = "Δημιουργία χώρου...";
+        resultText.SetTextColor(Muted);
+
+        try
+        {
+            var response = await _api.PostCreateRoomAsync(folder.Id, new CreateRoomRequest
+            {
+                Name = name
+            });
+
+            if (response?.Ok == true)
+            {
+                resultText.Text = response.Message;
+                resultText.SetTextColor(Green);
+
+                await Task.Delay(650);
+                await ShowRoomsAsync(folder);
+                return;
+            }
+
+            resultText.Text = response?.Message ?? "Δεν ελήφθη απάντηση από τον server.";
+            resultText.SetTextColor(response?.Locked == true ? Amber : Red);
+            submitButton.Enabled = true;
+        }
+        catch (Exception ex)
+        {
+            resultText.Text = $"Σφάλμα: {ex.Message}";
+            resultText.SetTextColor(Red);
+            submitButton.Enabled = true;
+        }
     }
 
     private async Task ShowRoomSessionAsync(RoomSessionDto room)
