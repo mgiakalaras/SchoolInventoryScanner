@@ -393,3 +393,59 @@ public sealed class QuickAddItemDto
     }
 }
 
+public sealed class CreateRoomRequest
+{
+    [JsonPropertyName("name")]
+    public string Name { get; set; } = "";
+
+    [JsonPropertyName("sortOrder")]
+    public int? SortOrder { get; set; }
+}
+
+public sealed class CreateRoomResponse
+{
+    [JsonPropertyName("ok")]
+    public bool Ok { get; set; }
+
+    [JsonPropertyName("createdRoom")]
+    public bool CreatedRoom { get; set; }
+
+    [JsonPropertyName("createdSession")]
+    public bool CreatedSession { get; set; }
+
+    [JsonPropertyName("alreadyExists")]
+    public bool AlreadyExists { get; set; }
+
+    [JsonPropertyName("locked")]
+    public bool Locked { get; set; }
+
+    [JsonPropertyName("isFirstInventory")]
+    public bool IsFirstInventory { get; set; }
+
+    [JsonPropertyName("message")]
+    public string Message { get; set; } = "";
+
+    [JsonPropertyName("room")]
+    public CreatedRoomDto? Room { get; set; }
+
+    [JsonPropertyName("session")]
+    public RoomSessionDto? Session { get; set; }
+}
+
+public sealed class CreatedRoomDto
+{
+    [JsonPropertyName("id")]
+    public int Id { get; set; }
+
+    [JsonPropertyName("name")]
+    public string Name { get; set; } = "";
+
+    [JsonPropertyName("sortOrder")]
+    public int SortOrder { get; set; }
+
+    public override string ToString()
+    {
+        return Name;
+    }
+}
+

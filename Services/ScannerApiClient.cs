@@ -39,6 +39,44 @@ public sealed class ScannerApiClient
         return await GetAsync<RoomSessionResponse>($"/api/mobile/room-sessions/{roomSessionId}");
     }
 
+
+    public async Task<CreateRoomResponse?> PostCreateRoomAsync(int folderId, CreateRoomRequest request)
+    {
+        var response = await _httpClient.PostAsJsonAsync(
+            BuildUrl($"/api/mobile/audit-folders/{folderId}/rooms/create"),
+            request);
+
+        var json = await response.Content.ReadAsStringAsync();
+
+        try
+        {
+            var result = JsonSerializer.Deserialize<CreateRoomResponse>(json, JsonOptions);
+
+            if (result != null)
+            {
+                return result;
+            }
+
+            return new CreateRoomResponse
+            {
+                Ok = false,
+                Message = response.IsSuccessStatusCode
+                    ? "Ο server απάντησε, αλλά το αποτέλεσμα δεν διαβάστηκε."
+                    : $"Σφάλμα server: {(int)response.StatusCode}"
+            };
+        }
+        catch
+        {
+            return new CreateRoomResponse
+            {
+                Ok = false,
+                Message = response.IsSuccessStatusCode
+                    ? "Ο server απάντησε, αλλά το αποτέλεσμα δεν διαβάστηκε."
+                    : $"Σφάλμα server: {(int)response.StatusCode}"
+            };
+        }
+    }
+
     public async Task<ScanResponse?> PostScanAsync(int roomSessionId, string code)
     {
         var response = await _httpClient.PostAsJsonAsync(
