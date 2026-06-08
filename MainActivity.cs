@@ -446,7 +446,7 @@ public sealed class MainActivity : Activity
         };
 
         var quickAddButton = CreateSecondaryButton("+ Νέο αντικείμενο στον χώρο");
-        quickAddButton.Click += (_, _) => ShowQuickAddItem(room);
+        quickAddButton.Click += async (_, _) => await ShowQuickAddItemAsync(room);
 
         root.AddView(CreateAccentCard(Stack(
             CreateSectionHeader("Σάρωση αντικειμένων", "Η κάμερα είναι η βασική ροή. Το χειροκίνητο πεδίο μένει ως fallback."),
@@ -483,7 +483,29 @@ public sealed class MainActivity : Activity
     }
 
 
-    private void ShowQuickAddItem(RoomSessionDto room)
+
+    private async Task ShowQuickAddItemAsync(RoomSessionDto room)
+    {
+        _screen = "quickadd";
+        _selectedRoom = room;
+
+        ShowLoading("Φόρτωση", "Φόρτωση επιλογών γρήγορης καταχώρησης...");
+
+        QuickAddOptionsResponse options;
+
+        try
+        {
+            options = await _api.GetQuickAddOptionsAsync() ?? CreateFallbackQuickAddOptions();
+        }
+        catch
+        {
+            options = CreateFallbackQuickAddOptions();
+        }
+
+        ShowQuickAddItem(room, options);
+    }
+
+    private void ShowQuickAddItem(RoomSessionDto room, QuickAddOptionsResponse options)
     {
         _screen = "quickadd";
         _selectedRoom = room;
@@ -500,25 +522,49 @@ public sealed class MainActivity : Activity
         back.Click += async (_, _) => await ShowRoomSessionAsync(room);
         root.AddView(back);
 
-        var nameInput = CreateEditText("Ονομασία *");
-        var categoryInput = CreateEditText("Κατηγορία");
-        categoryInput.Text = "Προς έλεγχο";
+        var guidance = options.Guidance ?? new QuickAddGuidanceDto();
+
+        var typeNames = options.Categories
+            .Select(x => x.Name)
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct()
+            .ToList();
+
+        if (typeNames.Count == 0)
+        {
+            typeNames.Add(options.DefaultCategoryName);
+        }
+
+        var typeSpinner = CreateSpinner(typeNames, FindDefaultTypeIndex(typeNames, options.DefaultCategoryName));
+        var newTypeInput = CreateEditText(guidance.NewTypeLabel);
+
+        var conditionOptions = options.Conditions.Count > 0
+            ? options.Conditions
+            : CreateFallbackQuickAddOptions().Conditions;
+
+        var conditionSpinner = CreateSpinner(
+            conditionOptions.Select(x => x.Label).ToList(),
+            FindDefaultConditionIndex(conditionOptions));
 
         var brandInput = CreateEditText("Μάρκα");
         var modelInput = CreateEditText("Μοντέλο");
         var serialInput = CreateEditText("Serial Number");
-        var quantityInput = CreateEditText("Ποσότητα");
-        quantityInput.Text = "1";
-        var notesInput = CreateEditText("Σημείωση");
 
-        var resultText = CreateBodyText("Συμπλήρωσε τα βασικά. Μετά από το web app μπορείς να κάνεις κανονική διόρθωση/έλεγχο.");
+        var quantityInput = CreateEditText(options.QuantityLabel);
+        quantityInput.Text = Math.Max(1, options.QuantityDefault).ToString();
+
+        var notesInput = CreateEditText(guidance.NotesLabel);
+
+        var resultText = CreateBodyText("Το αντικείμενο θα προστεθεί στον τρέχοντα χώρο ως νέο εύρημα και θα μείνει για έλεγχο από το web app.");
         resultText.SetTextColor(Muted);
 
         var submit = CreatePrimaryButton("Προσθήκη στον χώρο");
         submit.Click += async (_, _) => await SubmitQuickAddItemAsync(
             room,
-            nameInput,
-            categoryInput,
+            typeSpinner,
+            newTypeInput,
+            conditionSpinner,
+            conditionOptions,
             brandInput,
             modelInput,
             serialInput,
@@ -528,20 +574,33 @@ public sealed class MainActivity : Activity
             submit);
 
         root.AddView(CreateAccentCard(Stack(
-            CreateSectionHeader("Γρήγορη καταχώρηση", "Για αντικείμενα που βρέθηκαν στον χώρο αλλά δεν υπάρχουν στη λίστα."),
-            nameInput,
-            categoryInput,
+            CreateSectionHeader("1. Τι βρέθηκε;", "Διάλεξε τύπο αντικειμένου από τη λίστα ή γράψε νέο τύπο αν δεν υπάρχει."),
+            CreateFieldLabel(guidance.PrimaryFieldLabel + " *"),
+            typeSpinner,
+            CreateSmallText("Αν ο τύπος υπάρχει στη λίστα, διάλεξέ τον. Αν όχι, συμπλήρωσε το επόμενο πεδίο."),
+            newTypeInput,
+            CreateDivider(),
+            CreateSectionHeader("2. Κατάσταση", "Η λειτουργική κατάσταση είναι ξεχωριστή από το ότι το αντικείμενο είναι προς έλεγχο."),
+            CreateFieldLabel(guidance.ConditionLabel + " *"),
+            conditionSpinner,
+            CreateSmallText(guidance.ReviewFlagText),
+            CreateDivider(),
+            CreateSectionHeader("3. Βασικά στοιχεία", "Συμπλήρωσε όσα ξέρεις τώρα. Τα υπόλοιπα διορθώνονται μετά από το web app."),
             brandInput,
             modelInput,
             serialInput,
+            CreateFieldLabel(options.QuantityLabel),
             quantityInput,
+            CreateSmallText(options.Guidance?.QuantityHelpText ?? "Για κανονικό εξοπλισμό άφησέ το 1."),
+            CreateDivider(),
+            CreateSectionHeader("4. Σημείωση", "Προαιρετικά γράψε πού/πώς βρέθηκε ή τι χρειάζεται έλεγχο."),
             notesInput,
             submit,
             resultText), Green));
 
         root.AddView(CreateInfoStrip(
             "Μετά την καταχώρηση",
-            "Το αντικείμενο μπαίνει στη βάση, παίρνει QR κωδικό και σημειώνεται ως νέο εύρημα προς έλεγχο από το web app."));
+            "Το νέο αντικείμενο θα εμφανιστεί στο web app στα Νέα ευρήματα, ώστε να γίνει έλεγχος στοιχείων και εκτύπωση QR."));
 
         root.AddView(CreateBottomNav("scan"));
         SetContentView(WrapInScrollView(root));
@@ -549,8 +608,10 @@ public sealed class MainActivity : Activity
 
     private async Task SubmitQuickAddItemAsync(
         RoomSessionDto room,
-        EditText nameInput,
-        EditText categoryInput,
+        Spinner typeSpinner,
+        EditText newTypeInput,
+        Spinner conditionSpinner,
+        List<QuickAddConditionOptionDto> conditionOptions,
         EditText brandInput,
         EditText modelInput,
         EditText serialInput,
@@ -559,11 +620,13 @@ public sealed class MainActivity : Activity
         TextView resultText,
         Button submitButton)
     {
-        var name = nameInput.Text?.Trim() ?? string.Empty;
+        var selectedType = typeSpinner.SelectedItem?.ToString()?.Trim() ?? string.Empty;
+        var newType = newTypeInput.Text?.Trim() ?? string.Empty;
+        var itemType = string.IsNullOrWhiteSpace(newType) ? selectedType : newType;
 
-        if (string.IsNullOrWhiteSpace(name))
+        if (string.IsNullOrWhiteSpace(itemType))
         {
-            resultText.Text = "Συμπλήρωσε πρώτα ονομασία αντικειμένου.";
+            resultText.Text = "Διάλεξε ή γράψε τύπο αντικειμένου.";
             resultText.SetTextColor(Amber);
             return;
         }
@@ -577,8 +640,12 @@ public sealed class MainActivity : Activity
             return;
         }
 
-        HideKeyboard(nameInput);
-        HideKeyboard(categoryInput);
+        var conditionIndex = Math.Max(0, conditionSpinner.SelectedItemPosition);
+        var conditionValue = conditionOptions.Count > conditionIndex
+            ? conditionOptions[conditionIndex].Value
+            : 2;
+
+        HideKeyboard(newTypeInput);
         HideKeyboard(brandInput);
         HideKeyboard(modelInput);
         HideKeyboard(serialInput);
@@ -593,13 +660,13 @@ public sealed class MainActivity : Activity
         {
             var request = new MobileQuickAddItemRequest
             {
-                Name = name,
-                CategoryName = CleanOptionalText(categoryInput.Text, "Προς έλεγχο"),
+                Name = itemType,
+                CategoryName = itemType,
                 Brand = CleanOptionalText(brandInput.Text),
                 Model = CleanOptionalText(modelInput.Text),
                 SerialNumber = CleanOptionalText(serialInput.Text),
                 Quantity = quantity,
-                Condition = 2,
+                Condition = conditionValue,
                 Notes = CleanOptionalText(notesInput.Text)
             };
 
@@ -637,6 +704,46 @@ public sealed class MainActivity : Activity
         }
 
         return cleaned;
+    }
+
+    private QuickAddOptionsResponse CreateFallbackQuickAddOptions()
+    {
+        return new QuickAddOptionsResponse
+        {
+            Ok = false,
+            DefaultCategoryName = "Προς έλεγχο",
+            QuantityDefault = 1,
+            QuantityLabel = "Ποσότητα (συνήθως 1)",
+            Categories = new List<QuickAddCategoryOptionDto>
+            {
+                new() { Id = 0, Name = "Προς έλεγχο" }
+            },
+            Conditions = new List<QuickAddConditionOptionDto>
+            {
+                new() { Value = 0, Name = "Working", Label = "Λειτουργικό" },
+                new() { Value = 1, Name = "NotWorking", Label = "Μη λειτουργικό" },
+                new() { Value = 2, Name = "NeedsCheck", Label = "Άγνωστο / Προς έλεγχο" }
+            },
+            Guidance = new QuickAddGuidanceDto()
+        };
+    }
+
+    private static int FindDefaultTypeIndex(List<string> typeNames, string defaultName)
+    {
+        var index = typeNames.FindIndex(x => string.Equals(x, defaultName, StringComparison.OrdinalIgnoreCase));
+
+        return index >= 0 ? index : 0;
+    }
+
+    private static int FindDefaultConditionIndex(List<QuickAddConditionOptionDto> conditions)
+    {
+        var index = conditions.FindIndex(x =>
+            x.Name.Contains("Needs", StringComparison.OrdinalIgnoreCase) ||
+            x.Name.Contains("Check", StringComparison.OrdinalIgnoreCase) ||
+            x.Label.Contains("Άγνω", StringComparison.OrdinalIgnoreCase) ||
+            x.Label.Contains("έλεγχο", StringComparison.OrdinalIgnoreCase));
+
+        return index >= 0 ? index : Math.Min(conditions.Count - 1, 0);
     }
 
     private async Task StartGoogleCodeScanAsync(RoomSessionDto room, TextView resultText)
@@ -1158,6 +1265,46 @@ public sealed class MainActivity : Activity
             TextSize = 13,
             Typeface = Typeface.DefaultBold
         }.WithTextColor(color).WithMargins(0, 0, 0, 6);
+    }
+
+
+    private TextView CreateFieldLabel(string text)
+    {
+        return new TextView(this)
+        {
+            Text = text,
+            TextSize = 13,
+            Typeface = Typeface.DefaultBold
+        }.WithTextColor(Text).WithMargins(0, 4, 0, 6);
+    }
+
+    private Spinner CreateSpinner(List<string> values, int selectedIndex = 0)
+    {
+        var adapter = new ArrayAdapter<string>(
+            this,
+            Android.Resource.Layout.SimpleSpinnerItem,
+            values);
+
+        adapter.SetDropDownViewResource(Android.Resource.Layout.SimpleSpinnerDropDownItem);
+
+        var spinner = new Spinner(this)
+        {
+            Adapter = adapter
+        };
+
+        spinner.SetBackgroundDrawable(MakeStroke(Surface3, Line, Dp(18), 1));
+        spinner.SetPadding(Dp(12), 0, Dp(12), 0);
+        spinner.LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, Dp(54))
+        {
+            BottomMargin = Dp(10)
+        };
+
+        if (values.Count > 0)
+        {
+            spinner.SetSelection(Math.Clamp(selectedIndex, 0, values.Count - 1));
+        }
+
+        return spinner;
     }
 
     private EditText CreateEditText(string hint)
