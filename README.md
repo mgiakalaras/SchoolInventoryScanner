@@ -16,10 +16,10 @@
 ## Current version
 
 ```text
-v0.4.0
+v0.4.1
 ```
 
-Η έκδοση `v0.4.0` αντιστοιχεί στην Android εφαρμογή μετά την προσθήκη του **Mobile Quick Add Item** workflow.
+Η έκδοση `v0.4.1` βελτιώνει τη φόρμα **Γρήγορη καταχώρηση / Νέο αντικείμενο στον χώρο**, ώστε να είναι πιο κοντά στη λογική της καρτέλας αντικειμένου του web app.
 
 ---
 
@@ -28,10 +28,11 @@ v0.4.0
 - Android συσκευή ή emulator.
 - Android 6.0+ / API 23+.
 - Πρόσβαση στο ίδιο δίκτυο με το School Inventory Manager web app.
+- School Inventory Manager web app με υποστήριξη mobile quick-add options API.
 - Ενεργό web app server URL, π.χ.
 
 ```text
-http://172.26.0.1:5148
+http://192.168.1.80:5148
 ```
 
 ---
@@ -58,21 +59,29 @@ http://172.26.0.1:5148
 
 Αν η κάμερα δεν μπορεί να διαβάσει QR, ο χρήστης μπορεί να περάσει χειροκίνητα τον κωδικό.
 
-### Quick add item
+### Quick add new item
 
 Αν ο χρήστης βρει αντικείμενο στον χώρο που δεν υπάρχει στα αναμενόμενα, μπορεί να το προσθέσει απευθείας από το κινητό.
 
-Η φόρμα περιλαμβάνει:
+Η φόρμα είναι χωρισμένη σε καθαρές ενότητες:
 
-- Ονομασία
-- Κατηγορία
+1. **Τι βρέθηκε;**
+2. **Κατάσταση**
+3. **Βασικά στοιχεία**
+4. **Σημείωση**
+
+Η φόρμα υποστηρίζει:
+
+- Τύπος αντικειμένου
+- Νέος τύπος αντικειμένου, αν δεν υπάρχει στη λίστα
+- Κατάσταση λειτουργίας
 - Μάρκα
 - Μοντέλο
 - Serial Number
-- Ποσότητα
+- Ποσότητα (συνήθως 1)
 - Σημείωση
 
-Το web app καταγράφει το αντικείμενο ως νέο εύρημα και το εμφανίζει στις σχετικές σελίδες review/QR.
+Το αντικείμενο περνάει στο web app ως νέο εύρημα και μένει για έλεγχο/διόρθωση πριν την εκτύπωση QR.
 
 ---
 
@@ -102,7 +111,7 @@ http://172.26.0.1:5148
 dotnet build SchoolInventoryScanner.csproj
 ```
 
-Τα υπάρχοντα warnings για deprecated Android APIs δεν είναι blockers σε αυτή τη φάση.
+Τα υπάρχοντα warnings για deprecated Android APIs δεν είναι blockers σε αυτή τη φάση, αλλά πρέπει να καθαριστούν σε επόμενο ξεχωριστό patch.
 
 ---
 
@@ -153,7 +162,7 @@ dotnet build SchoolInventoryScanner.csproj
 dotnet build SchoolInventoryScanner.csproj
 ```
 
-Δοκιμή σε emulator/κινητό.
+Δοκιμή σε emulator/κινητό/tablet.
 
 Μόνο μετά:
 
@@ -170,14 +179,14 @@ git push origin main
 Για release:
 
 ```powershell
-git tag -a v0.4.0 -m "School Inventory Scanner v0.4.0"
-git push origin v0.4.0
+git tag -a v0.4.1 -m "School Inventory Scanner v0.4.1"
+git push origin v0.4.1
 ```
 
 GitHub release title:
 
 ```text
-School Inventory Scanner v0.4.0 — Mobile quick add workflow
+School Inventory Scanner v0.4.1 — Quick add form polish
 ```
 
 ---
@@ -186,7 +195,8 @@ School Inventory Scanner v0.4.0 — Mobile quick add workflow
 
 Short term:
 
-- Tablet layout test.
+- Android warnings cleanup.
+- Tablet layout refinements if needed.
 - Splash screen.
 - First-run mini tutorial.
 - Tooltips / user guidance.
