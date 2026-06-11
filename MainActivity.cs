@@ -634,19 +634,52 @@ public sealed class MainActivity : Activity
 
         var guidance = options.Guidance ?? new QuickAddGuidanceDto();
 
+        var primaryFieldLabel = string.IsNullOrWhiteSpace(guidance.PrimaryFieldLabel)
+            ? "Τύπος αντικειμένου"
+            : guidance.PrimaryFieldLabel.Trim();
+
+        var newTypeLabel = string.IsNullOrWhiteSpace(guidance.NewTypeLabel)
+            ? "Νέος τύπος αντικειμένου"
+            : guidance.NewTypeLabel.Trim();
+
+        var conditionLabel = string.IsNullOrWhiteSpace(guidance.ConditionLabel)
+            ? "Κατάσταση"
+            : guidance.ConditionLabel.Trim();
+
+        var notesLabel = string.IsNullOrWhiteSpace(guidance.NotesLabel)
+            ? "Σημείωση"
+            : guidance.NotesLabel.Trim();
+
+        var reviewFlagText = string.IsNullOrWhiteSpace(guidance.ReviewFlagText)
+            ? "Προς έλεγχο από web app"
+            : guidance.ReviewFlagText.Trim();
+
+        var quantityLabel = string.IsNullOrWhiteSpace(options.QuantityLabel)
+            ? "Ποσότητα (συνήθως 1)"
+            : options.QuantityLabel.Trim();
+
+        var quantityHelpText = string.IsNullOrWhiteSpace(guidance.QuantityHelpText)
+            ? "Για κανονικό εξοπλισμό άφησέ το 1."
+            : guidance.QuantityHelpText.Trim();
+
+        var defaultTypeName = string.IsNullOrWhiteSpace(options.DefaultCategoryName)
+            ? "Άλλο"
+            : options.DefaultCategoryName.Trim();
+
         var typeNames = options.Categories
             .Select(x => x.Name)
             .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Select(x => x.Trim())
             .Distinct()
             .ToList();
 
         if (typeNames.Count == 0)
         {
-            typeNames.Add(options.DefaultCategoryName);
+            typeNames.Add(defaultTypeName);
         }
 
-        var typeSpinner = CreateSpinner(typeNames, FindDefaultTypeIndex(typeNames, options.DefaultCategoryName));
-        var newTypeInput = CreateEditText(guidance.NewTypeLabel);
+        var typeSpinner = CreateSpinner(typeNames, FindDefaultTypeIndex(typeNames, defaultTypeName));
+        var newTypeInput = CreateEditText(newTypeLabel);
 
         var conditionOptions = options.Conditions.Count > 0
             ? options.Conditions
@@ -660,10 +693,10 @@ public sealed class MainActivity : Activity
         var modelInput = CreateEditText("Μοντέλο");
         var serialInput = CreateEditText("Serial Number");
 
-        var quantityInput = CreateEditText(options.QuantityLabel);
+        var quantityInput = CreateEditText(quantityLabel);
         quantityInput.Text = Math.Max(1, options.QuantityDefault).ToString();
 
-        var notesInput = CreateEditText(guidance.NotesLabel);
+        var notesInput = CreateEditText(notesLabel);
 
         var resultText = CreateBodyText("Το αντικείμενο θα προστεθεί στον τρέχοντα χώρο ως νέο εύρημα και θα μείνει για έλεγχο από το web app.");
         resultText.SetTextColor(Muted);
@@ -685,23 +718,23 @@ public sealed class MainActivity : Activity
 
         root.AddView(CreateAccentCard(Stack(
             CreateSectionHeader("1. Τι βρέθηκε;", "Διάλεξε τύπο αντικειμένου από τη λίστα ή γράψε νέο τύπο αν δεν υπάρχει."),
-            CreateFieldLabel(guidance.PrimaryFieldLabel + " *"),
+            CreateFieldLabel(primaryFieldLabel + " *"),
             typeSpinner,
             CreateSmallText("Αν ο τύπος υπάρχει στη λίστα, διάλεξέ τον. Αν όχι, συμπλήρωσε το επόμενο πεδίο."),
             newTypeInput,
             CreateDivider(),
             CreateSectionHeader("2. Κατάσταση", "Η λειτουργική κατάσταση είναι ξεχωριστή από το ότι το αντικείμενο είναι προς έλεγχο."),
-            CreateFieldLabel(guidance.ConditionLabel + " *"),
+            CreateFieldLabel(conditionLabel + " *"),
             conditionSpinner,
-            CreateSmallText(guidance.ReviewFlagText),
+            CreateSmallText(reviewFlagText),
             CreateDivider(),
             CreateSectionHeader("3. Βασικά στοιχεία", "Συμπλήρωσε όσα ξέρεις τώρα. Τα υπόλοιπα διορθώνονται μετά από το web app."),
             brandInput,
             modelInput,
             serialInput,
-            CreateFieldLabel(options.QuantityLabel),
+            CreateFieldLabel(quantityLabel),
             quantityInput,
-            CreateSmallText(options.Guidance?.QuantityHelpText ?? "Για κανονικό εξοπλισμό άφησέ το 1."),
+            CreateSmallText(quantityHelpText),
             CreateDivider(),
             CreateSectionHeader("4. Σημείωση", "Προαιρετικά γράψε πού/πώς βρέθηκε ή τι χρειάζεται έλεγχο."),
             notesInput,
