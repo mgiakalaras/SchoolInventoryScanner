@@ -6,6 +6,7 @@
 
 - επιλογή φακέλου απογραφής,
 - επιλογή χώρου,
+- δημιουργία νέου χώρου σε φάκελο πρώτης απογραφής,
 - σάρωση QR αντικειμένων,
 - χειροκίνητη καταχώρηση κωδικού,
 - προσθήκη νέου αντικειμένου στον τρέχοντα χώρο,
@@ -16,10 +17,19 @@
 ## Current version
 
 ```text
-v0.4.1
+v0.5.0
 ```
 
-Η έκδοση `v0.4.1` βελτιώνει τη φόρμα **Γρήγορη καταχώρηση / Νέο αντικείμενο στον χώρο**, ώστε να είναι πιο κοντά στη λογική της καρτέλας αντικειμένου του web app.
+Η έκδοση `v0.5.0` αντιστοιχεί στο Android Scanner μετά την ολοκλήρωση της ροής **Πρώτη απογραφή / από μηδενική βάση**.
+
+Η εφαρμογή μπορεί πλέον να χρησιμοποιηθεί σε σχολείο που ξεκινά απογραφή από το μηδέν:
+
+1. επιλογή φακέλου πρώτης απογραφής,
+2. δημιουργία νέου χώρου από κινητό/tablet,
+3. άνοιγμα χώρου,
+4. προσθήκη νέου αντικειμένου,
+5. έλεγχος/διόρθωση από το web app,
+6. εκτύπωση QR labels για νέα ευρήματα.
 
 ---
 
@@ -28,7 +38,7 @@ v0.4.1
 - Android συσκευή ή emulator.
 - Android 6.0+ / API 23+.
 - Πρόσβαση στο ίδιο δίκτυο με το School Inventory Manager web app.
-- School Inventory Manager web app με υποστήριξη mobile quick-add options API.
+- School Inventory Manager web app `v0.7.0` ή νεότερο.
 - Ενεργό web app server URL, π.χ.
 
 ```text
@@ -46,6 +56,23 @@ http://192.168.1.80:5148
 ### Audit folders
 
 Η εφαρμογή φορτώνει τους διαθέσιμους φακέλους απογραφής από το web app.
+
+### First inventory room creation
+
+Σε φάκελο πρώτης απογραφής, ο χρήστης μπορεί να δημιουργήσει νέο χώρο απευθείας από Android:
+
+```text
++ Νέος χώρος
+```
+
+Παραδείγματα χώρων:
+
+- Αίθουσα Α1
+- Εργαστήριο Πληροφορικής
+- Γραφείο Διευθυντή
+- Αποθήκη
+
+Ο χώρος δημιουργείται στο web app και εμφανίζεται στη λίστα χώρων του φακέλου.
 
 ### Room selection
 
@@ -85,17 +112,37 @@ http://192.168.1.80:5148
 
 ---
 
+## Related web app endpoints
+
+Το Android Scanner χρησιμοποιεί mobile endpoints όπως:
+
+```text
+/api/mobile/health
+/api/mobile/audit-folders
+/api/mobile/audit-folders/{folderId}/rooms
+/api/mobile/audit-folders/{folderId}/rooms/create
+/api/mobile/room-sessions/{roomSessionId}
+/api/mobile/room-sessions/{roomSessionId}/scan
+/api/mobile/room-sessions/{roomSessionId}/add-item
+/api/mobile/quick-add-options
+```
+
+---
+
 ## Related web app pages
 
 Στο School Inventory Manager web app:
 
 ```text
+/InventoryAudits
 /InventoryAudits/MobileFindings
 /Labels/MobileFindings
+/Scanner
 ```
 
 Χρήση:
 
+- δημιουργία φακέλου πρώτης απογραφής,
 - έλεγχος νέων ευρημάτων,
 - επεξεργασία στοιχείων,
 - QR labels μόνο για νέα ευρήματα,
@@ -111,7 +158,12 @@ http://192.168.1.80:5148
 dotnet build SchoolInventoryScanner.csproj
 ```
 
-Τα υπάρχοντα warnings για deprecated Android APIs δεν είναι blockers σε αυτή τη φάση, αλλά πρέπει να καθαριστούν σε επόμενο ξεχωριστό patch.
+Η έκδοση `v0.5.0` κλειδώνει σε κατάσταση:
+
+```text
+0 errors
+0 warnings
+```
 
 ---
 
@@ -162,50 +214,12 @@ dotnet build SchoolInventoryScanner.csproj
 dotnet build SchoolInventoryScanner.csproj
 ```
 
-Δοκιμή σε emulator/κινητό/tablet.
-
-Μόνο μετά:
-
-```powershell
-git add .
-git commit -m "Meaningful commit message"
-git push origin main
-```
+Δοκιμή σε emulator/συσκευή και μετά commit.
 
 ---
 
-## Release workflow
-
-Για release:
-
-```powershell
-git tag -a v0.4.1 -m "School Inventory Scanner v0.4.1"
-git push origin v0.4.1
-```
-
-GitHub release title:
+## Suggested version tag
 
 ```text
-School Inventory Scanner v0.4.1 — Quick add form polish
+v0.5.0
 ```
-
----
-
-## Roadmap
-
-Short term:
-
-- Android warnings cleanup.
-- Tablet layout refinements if needed.
-- Splash screen.
-- First-run mini tutorial.
-- Tooltips / user guidance.
-- Better visual polish.
-- Safer APK release flow.
-
-Later:
-
-- More structured app settings screen.
-- Better offline/error states.
-- Optional custom scanner screen if needed.
-- Signed release APK/AAB.

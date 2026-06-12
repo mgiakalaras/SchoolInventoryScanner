@@ -10,28 +10,11 @@
 
     <ApplicationId>gr.nyxsystems.schoolinventoryscanner</ApplicationId>
     <ApplicationTitle>School Inventory Scanner</ApplicationTitle>
-    <ApplicationDisplayVersion>0.4.1</ApplicationDisplayVersion>
-    <ApplicationVersion>41</ApplicationVersion>
+    <ApplicationDisplayVersion>0.5.0</ApplicationDisplayVersion>
+    <ApplicationVersion>50</ApplicationVersion>
     <AndroidPackageFormat>apk</AndroidPackageFormat>
     <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
     <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
-
-    <!--
-      Warning hygiene for the current native Android implementation.
-
-      CS0618:
-      Existing native UI helpers still use Android's deprecated SetBackgroundDrawable API.
-      It works on the supported Android versions and will be replaced later in a focused UI helper refactor.
-
-      CA1422:
-      Current status/navigation bar and back-button calls are guarded by the Android runtime target,
-      but .NET still reports Android API obsoletion/analyzer warnings.
-
-      CS8602:
-      One nullable-flow warning remains in the current MainActivity path. Runtime testing on phone/tablet passed.
-      We keep this suppression temporary and track it in docs/ANDROID_WARNING_CLEANUP.md.
-    -->
-    <NoWarn>$(NoWarn);CS0618;CA1422;CS8602</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
