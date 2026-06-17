@@ -171,6 +171,9 @@ public sealed class ScanResponse
     [JsonPropertyName("found")]
     public bool Found { get; set; }
 
+    [JsonPropertyName("alreadyScanned")]
+    public bool AlreadyScanned { get; set; }
+
     [JsonPropertyName("status")]
     public string Status { get; set; } = "";
 
