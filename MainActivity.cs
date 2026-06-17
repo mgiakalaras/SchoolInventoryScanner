@@ -520,7 +520,7 @@ public sealed class MainActivity : Activity
         var resultText = CreateBodyText("Πάτα σάρωση ή γράψε χειροκίνητα κωδικό QR.");
 
         var cameraButton = CreatePrimaryButton("Σάρωση QR με κάμερα");
-        cameraButton.Click += async (_, _) => await StartGoogleCodeScanAsync(room, resultText);
+        cameraButton.Click += async (_, _) => await StartGoogleCodeScanAsync(room, resultText, items);
 
         var manualButton = CreateSecondaryButton("Χειροκίνητη καταγραφή");
         manualButton.Click += async (_, _) =>
@@ -535,6 +535,17 @@ public sealed class MainActivity : Activity
             }
 
             HideKeyboard(codeInput);
+
+            var alreadyScannedItem = FindAlreadyScannedExpectedItem(items, code);
+            if (alreadyScannedItem != null)
+            {
+                ShowAlreadyScannedDialog(alreadyScannedItem);
+                resultText.Text = $"Το αντικείμενο έχει ήδη σαρωθεί: {alreadyScannedItem.Name}";
+                resultText.SetTextColor(Amber);
+                codeInput.Text = string.Empty;
+                return;
+            }
+
             resultText.Text = "Αποστολή scan...";
             resultText.SetTextColor(Muted);
 
@@ -888,6 +899,81 @@ public sealed class MainActivity : Activity
         return index >= 0 ? index : Math.Min(conditions.Count - 1, 0);
     }
 
+    private ExpectedItemDto? FindAlreadyScannedExpectedItem(List<ExpectedItemDto> expectedItems, string scannedValue)
+    {
+        if (expectedItems.Count == 0 || string.IsNullOrWhiteSpace(scannedValue))
+        {
+            return null;
+        }
+
+        return expectedItems.FirstOrDefault(item =>
+            item.Scanned &&
+            QrValueMatchesItemCode(scannedValue, item.Code));
+    }
+
+    private static bool QrValueMatchesItemCode(string scannedValue, string itemCode)
+    {
+        if (string.IsNullOrWhiteSpace(scannedValue) || string.IsNullOrWhiteSpace(itemCode))
+        {
+            return false;
+        }
+
+        var normalizedScanned = NormalizeQrCodeCandidate(scannedValue);
+        var normalizedCode = NormalizeQrCodeCandidate(itemCode);
+
+        return normalizedScanned == normalizedCode ||
+               scannedValue.Contains(itemCode, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string NormalizeQrCodeCandidate(string value)
+    {
+        var candidate = (value ?? string.Empty).Trim();
+
+        if (Uri.TryCreate(candidate, UriKind.Absolute, out var uri))
+        {
+            candidate = uri.Segments.LastOrDefault()?.Trim('/') ?? candidate;
+        }
+
+        var questionMarkIndex = candidate.IndexOf('?');
+        if (questionMarkIndex >= 0)
+        {
+            candidate = candidate[..questionMarkIndex];
+        }
+
+        var hashIndex = candidate.IndexOf('#');
+        if (hashIndex >= 0)
+        {
+            candidate = candidate[..hashIndex];
+        }
+
+        return candidate.Trim().Trim('/').ToUpperInvariant();
+    }
+
+    private void ShowAlreadyScannedDialog(ExpectedItemDto item)
+    {
+        var message = string.IsNullOrWhiteSpace(item.Name)
+            ? "Το αντικείμενο έχει ήδη σαρωθεί σε αυτόν τον χώρο."
+            : $"Το αντικείμενο έχει ήδη σαρωθεί σε αυτόν τον χώρο.\n\n{item.Name}\n{item.Code}";
+
+        ShowAlreadyScannedDialog(message);
+    }
+
+    private void ShowAlreadyScannedDialog(string message)
+    {
+        RunOnUiThread(() =>
+        {
+            using var dialog = new AlertDialog.Builder(this)
+                .SetTitle("Ήδη σκαναρισμένο")
+                .SetMessage(string.IsNullOrWhiteSpace(message)
+                    ? "Το αντικείμενο έχει ήδη σαρωθεί σε αυτόν τον χώρο."
+                    : message)
+                .SetPositiveButton("OK", (_, _) => { })
+                .Create();
+
+            dialog.Show();
+        });
+    }
+
     private void ApplyScanResultMessage(ScanResponse? scanResponse, TextView resultText)
     {
         if (scanResponse == null)
@@ -902,13 +988,14 @@ public sealed class MainActivity : Activity
         if (scanResponse.AlreadyScanned)
         {
             resultText.SetTextColor(Amber);
+            ShowAlreadyScannedDialog(scanResponse.Message);
             return;
         }
 
         resultText.SetTextColor(scanResponse.Ok ? Green : Red);
     }
 
-    private async Task StartGoogleCodeScanAsync(RoomSessionDto room, TextView resultText)
+    private async Task StartGoogleCodeScanAsync(RoomSessionDto room, TextView resultText, List<ExpectedItemDto> expectedItems)
     {
         resultText.Text = "Άνοιγμα κάμερας QR scanner...";
         resultText.SetTextColor(Muted);
@@ -921,6 +1008,15 @@ public sealed class MainActivity : Activity
             if (string.IsNullOrWhiteSpace(rawValue))
             {
                 resultText.Text = "Η σάρωση ακυρώθηκε.";
+                resultText.SetTextColor(Amber);
+                return;
+            }
+
+            var alreadyScannedItem = FindAlreadyScannedExpectedItem(expectedItems, rawValue);
+            if (alreadyScannedItem != null)
+            {
+                ShowAlreadyScannedDialog(alreadyScannedItem);
+                resultText.Text = $"Το αντικείμενο έχει ήδη σαρωθεί: {alreadyScannedItem.Name}";
                 resultText.SetTextColor(Amber);
                 return;
             }
