@@ -1,225 +1,200 @@
 # School Inventory Scanner
 
-**School Inventory Scanner** είναι native Android εφαρμογή για επιτόπια απογραφή σχολικού εξοπλισμού με QR codes.
+**School Inventory Scanner** είναι η Android companion εφαρμογή για το **School Inventory Manager**.
 
-Συνδέεται με το web app **School Inventory Manager** και χρησιμοποιείται μέσα σε αίθουσες/χώρους για:
+Χρησιμοποιείται από κινητό ή tablet για σάρωση QR, έλεγχο χώρων, δημιουργία νέων χώρων και γρήγορη προσθήκη αντικειμένων κατά την απογραφή.
 
-- επιλογή φακέλου απογραφής,
-- επιλογή χώρου,
-- δημιουργία νέου χώρου σε φάκελο πρώτης απογραφής,
-- σάρωση QR αντικειμένων,
-- χειροκίνητη καταχώρηση κωδικού,
-- προσθήκη νέου αντικειμένου στον τρέχοντα χώρο,
-- συγχρονισμό με το web app.
+## Τι κάνει
 
----
+- Σύνδεση με το School Inventory Manager web app.
+- Προβολή φακέλων απογραφής.
+- Επιλογή χώρου.
+- Σάρωση QR αντικειμένων.
+- Ένδειξη σωστού χώρου.
+- Ένδειξη λάθος χώρου.
+- Ένδειξη άγνωστου QR.
+- Popup όταν ένα αντικείμενο έχει ήδη σκαναριστεί.
+- Δημιουργία νέου χώρου από κινητό/tablet.
+- Γρήγορη προσθήκη νέου αντικειμένου.
+- Υποστήριξη πρώτης απογραφής από μηδενική βάση.
 
-## Current version
+## Απαιτείται web app
+
+Η εφαρμογή δεν λειτουργεί μόνη της.
+
+Χρειάζεται να τρέχει το web app:
 
 ```text
-v0.5.0
+School Inventory Manager
 ```
 
-Η έκδοση `v0.5.0` αντιστοιχεί στο Android Scanner μετά την ολοκλήρωση της ροής **Πρώτη απογραφή / από μηδενική βάση**.
+Το κινητό/tablet και ο server πρέπει να είναι στο ίδιο δίκτυο ή να υπάρχει πρόσβαση στη διεύθυνση του server.
 
-Η εφαρμογή μπορεί πλέον να χρησιμοποιηθεί σε σχολείο που ξεκινά απογραφή από το μηδέν:
-
-1. επιλογή φακέλου πρώτης απογραφής,
-2. δημιουργία νέου χώρου από κινητό/tablet,
-3. άνοιγμα χώρου,
-4. προσθήκη νέου αντικειμένου,
-5. έλεγχος/διόρθωση από το web app,
-6. εκτύπωση QR labels για νέα ευρήματα.
-
----
-
-## Requirements
-
-- Android συσκευή ή emulator.
-- Android 6.0+ / API 23+.
-- Πρόσβαση στο ίδιο δίκτυο με το School Inventory Manager web app.
-- School Inventory Manager web app `v0.7.0` ή νεότερο.
-- Ενεργό web app server URL, π.χ.
+Παράδειγμα:
 
 ```text
 http://192.168.1.80:5148
 ```
 
----
+## Πρώτη χρήση
 
-## Main features
+1. Άνοιξε την εφαρμογή.
+2. Βάλε τη διεύθυνση του web app/server.
+3. Έλεγξε τη σύνδεση.
+4. Διάλεξε φάκελο απογραφής.
+5. Διάλεξε χώρο ή δημιούργησε νέο.
+6. Ξεκίνα σάρωση.
 
-### Server connection
+## Ροή απογραφής
 
-Ο χρήστης ορίζει τη διεύθυνση του web app server και κάνει health check.
+### 1. Επιλογή φακέλου
 
-### Audit folders
+Ο χρήστης επιλέγει φάκελο απογραφής που έχει δημιουργηθεί στο web app.
 
-Η εφαρμογή φορτώνει τους διαθέσιμους φακέλους απογραφής από το web app.
+### 2. Επιλογή χώρου
 
-### First inventory room creation
-
-Σε φάκελο πρώτης απογραφής, ο χρήστης μπορεί να δημιουργήσει νέο χώρο απευθείας από Android:
-
-```text
-+ Νέος χώρος
-```
-
-Παραδείγματα χώρων:
-
-- Αίθουσα Α1
-- Εργαστήριο Πληροφορικής
-- Γραφείο Διευθυντή
-- Αποθήκη
-
-Ο χώρος δημιουργείται στο web app και εμφανίζεται στη λίστα χώρων του φακέλου.
-
-### Room selection
-
-Ο χρήστης επιλέγει τον χώρο που ελέγχει εκείνη τη στιγμή.
-
-### QR scanning
-
-Η σάρωση QR γίνεται μέσω Google Code Scanner / Google Play Services.
-
-### Manual scan fallback
-
-Αν η κάμερα δεν μπορεί να διαβάσει QR, ο χρήστης μπορεί να περάσει χειροκίνητα τον κωδικό.
-
-### Quick add new item
-
-Αν ο χρήστης βρει αντικείμενο στον χώρο που δεν υπάρχει στα αναμενόμενα, μπορεί να το προσθέσει απευθείας από το κινητό.
-
-Η φόρμα είναι χωρισμένη σε καθαρές ενότητες:
-
-1. **Τι βρέθηκε;**
-2. **Κατάσταση**
-3. **Βασικά στοιχεία**
-4. **Σημείωση**
-
-Η φόρμα υποστηρίζει:
-
-- Τύπος αντικειμένου
-- Νέος τύπος αντικειμένου, αν δεν υπάρχει στη λίστα
-- Κατάσταση λειτουργίας
-- Μάρκα
-- Μοντέλο
-- Serial Number
-- Ποσότητα (συνήθως 1)
-- Σημείωση
-
-Το αντικείμενο περνάει στο web app ως νέο εύρημα και μένει για έλεγχο/διόρθωση πριν την εκτύπωση QR.
-
----
-
-## Related web app endpoints
-
-Το Android Scanner χρησιμοποιεί mobile endpoints όπως:
+Ο χρήστης επιλέγει χώρο, π.χ.:
 
 ```text
-/api/mobile/health
-/api/mobile/audit-folders
-/api/mobile/audit-folders/{folderId}/rooms
-/api/mobile/audit-folders/{folderId}/rooms/create
-/api/mobile/room-sessions/{roomSessionId}
-/api/mobile/room-sessions/{roomSessionId}/scan
-/api/mobile/room-sessions/{roomSessionId}/add-item
-/api/mobile/quick-add-options
+Γραφείο Διεύθυνσης
+Εργαστήριο Πληροφορικής
+Αίθουσα Α1
 ```
 
----
+Σε πρώτη απογραφή μπορεί να δημιουργήσει νέο χώρο από το κινητό.
 
-## Related web app pages
+### 3. Σάρωση QR
 
-Στο School Inventory Manager web app:
+Η εφαρμογή μπορεί να εμφανίσει:
 
 ```text
-/InventoryAudits
-/InventoryAudits/MobileFindings
-/Labels/MobileFindings
-/Scanner
+Το αντικείμενο βρέθηκε σωστά στον χώρο.
+Το αντικείμενο είναι δηλωμένο σε άλλο χώρο.
+Άγνωστο QR.
+Το αντικείμενο έχει ήδη σαρωθεί σε αυτόν τον χώρο.
 ```
 
-Χρήση:
+### 4. Νέο αντικείμενο
 
-- δημιουργία φακέλου πρώτης απογραφής,
-- έλεγχος νέων ευρημάτων,
-- επεξεργασία στοιχείων,
-- QR labels μόνο για νέα ευρήματα,
-- συνέχιση απογραφής.
+Αν βρεθεί αντικείμενο που δεν υπάρχει στη βάση, ο χρήστης μπορεί να το προσθέσει προσωρινά από το κινητό.
 
----
+Μετά πρέπει να γίνει review από το web app.
 
-## Build
+## Πρώτη απογραφή από μηδενική βάση
 
-Από τον φάκελο του project:
+1. Δημιουργείται στο web app φάκελος τύπου:
+
+```text
+Πρώτη απογραφή / από μηδενική βάση
+```
+
+2. Από το Android δημιουργούνται χώροι.
+3. Από το Android προστίθενται αντικείμενα.
+4. Από το web app γίνεται review.
+5. Εκτυπώνονται QR.
+6. Η εγκεκριμένη απογραφή γίνεται η αρχική βάση του σχολείου.
+
+## Εγκατάσταση από GitHub
+
+Από το GitHub Release κατέβασε:
+
+```text
+SchoolInventoryScanner-v0.5.0-github.apk
+```
+
+Μετά:
+
+1. Αντέγραψε το APK στο κινητό/tablet.
+2. Άνοιξέ το από τη συσκευή.
+3. Αν ζητηθεί, επίτρεψε εγκατάσταση από άγνωστες πηγές.
+4. Εγκατάστησε την εφαρμογή.
+5. Όρισε τη διεύθυνση του web server.
+
+## Google Play
+
+Για Google Play χρησιμοποιείται:
+
+```text
+.aab
+```
+
+Για GitHub/sideload χρησιμοποιείται:
+
+```text
+.apk
+```
+
+Το `.aab` δεν είναι για απευθείας εγκατάσταση από χρήστη.
+
+## Development build
 
 ```powershell
 dotnet build SchoolInventoryScanner.csproj
 ```
 
-Η έκδοση `v0.5.0` κλειδώνει σε κατάσταση:
+Απαιτούνται:
+
+- .NET SDK,
+- Android workload,
+- Android SDK,
+- JDK,
+- Android device ή emulator.
+
+## Release build
+
+Υπάρχουν scripts:
 
 ```text
-0 errors
-0 warnings
+tools/New-AndroidUploadKeystore.ps1
+tools/Build-AndroidReleasePackages.ps1
 ```
 
----
+Πρώτα δημιουργείται upload keystore:
 
-## Debug / deploy from Visual Studio
+```powershell
+.\tools\New-AndroidUploadKeystore.ps1
+```
 
-Άνοιγμα:
+Μετά χτίζονται τα release packages:
+
+```powershell
+.\tools\Build-AndroidReleasePackages.ps1
+```
+
+Παράγονται:
 
 ```text
-SchoolInventoryScanner.csproj
+SchoolInventoryScanner-v0.5.0-google-play.aab
+SchoolInventoryScanner-v0.5.0-github.apk
 ```
 
-Μετά επιλογή emulator ή συνδεδεμένη Android συσκευή και Run/Deploy από Visual Studio.
+## Μην ανεβάζεις δημόσια
 
----
+Μην ανεβάσεις στο GitHub:
 
-## Sideload APK
-
-Για δημιουργία debug APK:
-
-```powershell
-dotnet publish SchoolInventoryScanner.csproj -f net10.0-android -c Debug /p:AndroidPackageFormat=apk /p:EmbedAssembliesIntoApk=true /p:AndroidUseSharedRuntime=false
+```text
+release-signing/
+*.keystore
+*.jks
+artifacts/
 ```
 
-Μετά εντοπισμός APK:
+Το keystore είναι ιδιωτικό κλειδί υπογραφής και πρέπει να κρατηθεί ασφαλές.
 
-```powershell
-$apk = Get-ChildItem -Recurse -Filter *.apk | Sort-Object LastWriteTime -Descending | Select-Object -First 1
-$apk.FullName
-explorer /select,$apk.FullName
-```
+## Releases
 
-Το APK μπορεί να περαστεί στο κινητό με USB, Drive, OneDrive, LocalSend ή άλλο τρόπο.
+Κάθε έκδοση πρέπει να έχει:
 
----
+- tag,
+- GitHub Release,
+- APK attachment,
+- σύντομες οδηγίες,
+- changelog.
 
-## Development workflow
-
-Πρώτα έλεγχος:
-
-```powershell
-git status
-dotnet build SchoolInventoryScanner.csproj
-```
-
-Μετά από αλλαγή:
-
-```powershell
-dotnet build SchoolInventoryScanner.csproj
-```
-
-Δοκιμή σε emulator/συσκευή και μετά commit.
-
----
-
-## Suggested version tag
+Παράδειγμα:
 
 ```text
 v0.5.0
 ```
+
+Το έργο βρίσκεται σε ενεργή ανάπτυξη και συνοδεύει το School Inventory Manager web app.
